@@ -54,8 +54,8 @@ setup(
     ],
     keywords="finite elements, mesh quality, hexahedral, FEM, quality metrics",
     project_urls={
-        "Source": "https://github.com/yourusername/hex_quality",
-        "Bug Reports": "https://github.com/yourusername/hex_quality/issues",
-        "Documentation": "https://github.com/yourusername/hex_quality/blob/main/README.md",
+        "Source": "https://github.com/ZhuoQiuMcgill/hexquality",
+        "Bug Reports": "https://github.com/ZhuoQiuMcgill/hexquality/issues",
+        "Documentation": "https://github.com/ZhuoQiuMcgill/hexquality/blob/main/README.md",
     },
 )
