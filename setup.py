@@ -17,7 +17,7 @@ else:
 setup(
     name="hex_quality",
     version="1.0.0",
-    author="Finite Element Quality Assessment",
+    author="Zhuo Qiu",
     description="Quality metrics for 8-node hexahedral finite elements",
     long_description=long_description,
     long_description_content_type="text/markdown",
