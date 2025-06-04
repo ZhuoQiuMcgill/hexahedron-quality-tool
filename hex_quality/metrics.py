@@ -295,11 +295,37 @@ def scaled_jacobian(ref_hex, phys_hex):
     ValueError
         If input arrays are not shaped (8, 3).
     """
-    ref = np.asarray(ref_hex, dtype=float).reshape(8, 3)
-    phys = np.asarray(phys_hex, dtype=float).reshape(8, 3)
+    # Convert to numpy arrays first without reshaping
+    ref_array = np.asarray(ref_hex, dtype=float)
+    phys_array = np.asarray(phys_hex, dtype=float)
 
-    if ref.shape != (8, 3) or phys.shape != (8, 3):
+    # Validate input shapes before attempting to reshape
+    if ref_array.size != 24 or phys_array.size != 24:
         raise ValueError("Each hexahedron must be an (8, 3) array-like.")
+
+    # Now safely reshape
+    ref = ref_array.reshape(8, 3)
+    phys = phys_array.reshape(8, 3)
+
+    # Check for degenerate hexahedra (collapsed edges) in either ref or phys
+    def has_collapsed_edges(vertices):
+        """Check if hexahedron has any collapsed edges."""
+        # List of the 12 edges in the standard hexahedron connectivity
+        edges = [
+            (0, 1), (1, 2), (2, 3), (3, 0),  # bottom face
+            (4, 5), (5, 6), (6, 7), (7, 4),  # top face
+            (0, 4), (1, 5), (2, 6), (3, 7)  # vertical edges
+        ]
+
+        for i, j in edges:
+            edge_length = np.linalg.norm(vertices[i] - vertices[j])
+            if edge_length < 1e-14:  # Essentially zero
+                return True
+        return False
+
+    # Return 0.0 for degenerate cases
+    if has_collapsed_edges(ref) or has_collapsed_edges(phys):
+        return 0.0
 
     # --- Build affine map ---------------------------------------------------
     M = np.hstack((ref, np.ones((8, 1))))
@@ -307,16 +333,16 @@ def scaled_jacobian(ref_hex, phys_hex):
     A = P[:3, :].T  # 3×3
 
     # --- Scaled Jacobian -----------------------------------------------------
-    detA = np.linalg.det(A)
+    detA = float(np.linalg.det(A))  # Ensure scalar
     col_norms = np.linalg.norm(A, axis=0)  # ||a₁||, ||a₂||, ||a₃||
-    denom = np.prod(col_norms)
+    denom = float(np.prod(col_norms))  # Ensure scalar
 
-    # Handle degenerate case gracefully
+    # Handle degenerate transformation case gracefully
     if denom == 0.0:
         return 0.0
 
     SJ = detA / denom  # ∈ [-1, 1]
     scaled = 0.5 * (SJ + 1.0)  # ∈ [0, 1]
 
-    # Numerical safety clamp
-    return float(np.clip(scaled, 0.0, 1.0))
+    # Numerical safety clamp - scaled is now guaranteed to be a scalar
+    return float(max(0.0, min(1.0, scaled)))
